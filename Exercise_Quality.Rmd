@@ -1,0 +1,108 @@
+---
+title: "Prediction of Exercise Quality"
+author: "F. Alex Crofut"
+date: "Sunday, May 22, 2016"
+output: html_document
+---
+
+#Executive Summary
+
+
+
+#Getting Data and Preprocessing
+
+###Required Packages
+```{r packages, echo=FALSE, warning=FALSE, message=FALSE}
+if (!"caret" %in% installed.packages()) install.packages("caret", repos="http://cran.rstudio.com/")
+library("caret")
+if (!"randomForest" %in% installed.packages()) install.packages("randomForest", repos="http://cran.rstudio.com/")
+library("randomForest")
+if (!"RCurl" %in% installed.packages()) install.packages("RCurl", repos="http://cran.rstudio.com/")
+library("RCurl")
+if (!"rpart" %in% installed.packages()) install.packages("rpart", repos="http://cran.rstudio.com/")
+library("rpart")
+if (!"rpart.plot" %in% installed.packages()) install.packages("rpart.plot", repos="http://cran.rstudio.com/")
+library("rpart.plot")
+if (!"rattle" %in% installed.packages()) install.packages("rattle", repos="http://cran.rstudio.com/")
+library("rattle")
+```
+
+###Download Data
+Exercise data was downloaded from the following URLs:
+
+* [Training Data](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv)
+* [Test Data](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv)
+
+The data is in the form of two comma-delimited files, one for training data and one for testing data.  The data have many missing data points represented by "NA", "DIV/0" (a divide by zero error), and empty strings.  While reading the data, these strings are all converted to the standard "NA". 
+```{r getdata, cache=TRUE}
+urlTrain <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+urlTest <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+fileTrain <- getURL(urlTrain)
+fileTest <- getURL(urlTest)
+datTrain <- read.csv(textConnection(fileTrain), header=TRUE, sep=",", na.strings=c("NA", "#DIV/0!", ""))
+datTest <- read.csv(textConnection(fileTest), header=TRUE, sep=",", na.strings=c("NA", "#DIV/0!", ""))
+```
+
+###Clean the Data
+The training data is comprised of `r format(dim(datTrain)[1], big.mark=",")` observations of `r dim(datTrain)[2]` variables. The variables can be summarized thusly:
+
+1. The first column is a row index
+2. Column 2 contains the name of the person performing the exercise
+3. Columns 3-7 hold time-related variables related to each observation of the sensor readings
+4. Columns 8-159 contain the sensor reading variables, helpfully identified by a string indicated the exercise performed
+5. Column 160 contains the "classe" variable that is to be predicted
+
+```{r cleaning, echo=FALSE}
+# cast data as numeric
+for(i in c(8:159)) {datTrain[,i] <- as.numeric(as.character(datTrain[,i]))}
+for(i in c(8:159)) {datTest[,i] <- as.numeric(as.character(datTest[,i]))}
+
+# remove values with too many NAs
+threshna <- 0.75
+countna <- is.na(datTrain)
+dropcols <- which(colSums(countna) > threshna * dim(datTrain))
+datTrain <- datTrain[, -dropcols]
+datTest <- datTest[, -dropcols]
+
+# remove first column
+datTrain <- datTrain[, -1]
+datTest <- datTest[, -1]
+```
+
+Everything from column 8 through 159 are recast as numeric as they hold data from the sensors.  Many variables are comprised mostly of missing values.  This analysis uses a threshold of `r threshna * 100`% missing data to determine whether or not a variable will be included.  The first column holds a record number and is not useful for prediction.  It is therefore removed as well.  A quick exploration of the data shows that there does appear to be a relationship between time and performance.  Given the time frame, this may be related to tiring as exercises are performed.  Therefore, the date columns were retained.  This leaves `r dim(datTrain)[2] - 1` variables to use as predictors.  
+
+#Training the Predictor
+```{r prep, echo=FALSE}
+seedme <- 123
+set.seed(seedme)
+```
+For reproducibility, the seed is set to `r format(seedme, scientific=FALSE)`.  
+
+###Decision Tree
+```{r model decision tree}
+modDecTree <- rpart(classe ~ ., data=datTrain, method="class")         # train the model
+predDecTree <- predict(modDecTree, datTrain, type="class")            # predict on training set
+resultDecTree <- confusionMatrix(predDecTree, datTrain$classe)        # evaluate model success
+as.table(resultDecTree$overall)
+```
+The decision tree yielded an accuracy of `r round(resultDecTree$overall["Accuracy"] * 100, digits=1)`%, meaning an in-sample error rate of `r 100 - round(resultDecTree$overall["Accuracy"] * 100, digits=1)`%.
+
+###Random Forest
+```{r model random forest}
+modRandForest <- randomForest(classe ~ ., data=datTrain)
+predRandForest <- predict(modRandForest, datTrain, type="class")
+resultRandForest <- confusionMatrix(predRandForest, datTrain$classe)
+as.table(resultRandForest$overall)
+```
+The decision tree yielded an accuracy of `r round(resultRandForest$overall["Accuracy"] * 100, digits=1)`%, meaning an in-sample error rate of `r 100 - round(resultRandForest$overall["Accuracy"] * 100, digits=1)`%. This suggests the random forest model may be overfitted.
+
+###Predicting on the Test Data 
+The random forest had the higher accuracy and is therefore used to predict on the test data and estimate out-of-sample error.
+```{r predicting}
+preds <- predict(modRandForest, newdata=datTest)
+resultTest <- confusionMatrix(preds, datTest$classe)
+as.table(resultTest$overall)
+```
+With an accuracy of `r round(resltTest$overall["Accuracy"] * 100, digits=1)`%, the out-of-sample error rate is estimated as `r 100 - round(resultTest$overall["Accuracy"] * 100, digits=1)`%
+
+#Conclusion
