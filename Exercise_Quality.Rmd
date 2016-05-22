@@ -1,0 +1,100 @@
+---
+title: "Prediction of Exercise Quality"
+author: "F. Alex Crofut"
+date: "Sunday, May 22, 2016"
+output: html_document
+---
+
+#Executive Summary
+
+
+
+#Getting Data and Preprocessing
+
+###Required Packages
+```{r packages, echo=FALSE, warning=FALSE, message=FALSE}
+if (!"caret" %in% installed.packages()) install.packages("caret", repos="http://cran.rstudio.com/")
+library("caret")
+if (!"randomForest" %in% installed.packages()) install.packages("randomForest", repos="http://cran.rstudio.com/")
+library("randomForest")
+if (!"RCurl" %in% installed.packages()) install.packages("RCurl", repos="http://cran.rstudio.com/")
+library("RCurl")
+if (!"rpart" %in% installed.packages()) install.packages("rpart", repos="http://cran.rstudio.com/")
+library("rpart")
+if (!"rattle" %in% installed.packages()) install.packages("rattle", repos="http://cran.rstudio.com/")
+library("rattle")
+```
+
+###Download Data
+Exercise data was downloaded from the following URLs:
+
+* [Training Data](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv)
+* [Test Data](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv)
+
+The data is in the form of two comma-delimited files, one for training data and one for testing data.  The data have many missing data points represented by "NA", "DIV/0" (a divide by zero error), and empty strings.  While reading the data, these strings are all converted to the standard "NA". 
+```{r getdata, cache=TRUE}
+urlTrain <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+urlTest <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+fileTrain <- getURL(urlTrain)
+fileTest <- getURL(urlTest)
+datTrain <- read.csv(textConnection(fileTrain), header=TRUE, sep=",", na.strings=c("NA", "#DIV/0!", ""))
+datTest <- read.csv(textConnection(fileTest), header=TRUE, sep=",", na.strings=c("NA", "#DIV/0!", ""))
+```
+
+###Clean the Data
+The training data is comprised of `r format(dim(datTrain)[1], big.mark=",")` observations of `r dim(datTrain)[2]` variables. The variables can be summarized thusly:
+
+1. The first column is a row index
+2. Column 2 contains the name of the person performing the exercise
+3. Columns 3-7 hold time-related variables related to each observation of the sensor readings
+4. Columns 8-159 contain the sensor reading variables, helpfully identified by a string indicated the exercise performed
+5. Column 160 contains the "classe" variable that is to be predicted
+
+```{r cleaning, echo=FALSE}
+# cast data as numeric
+for(i in c(8:159)) {datTrain[,i] <- as.numeric(as.character(datTrain[,i]))}
+for(i in c(8:159)) {datTest[,i] <- as.numeric(as.character(datTest[,i]))}
+
+# remove values with too many NAs
+threshna <- 0.75
+countna <- is.na(datTrain)
+dropcols <- which(colSums(countna) > threshna * dim(datTrain))
+datTrain <- datTrain[, -dropcols]
+
+# remove first column
+datTrain <- datTrain[, -1]
+```
+
+Everything from column 8 through 159 are recast as numeric as they hold data from the sensors.  Many variables are comprised mostly of missing values.  This analysis uses a threshold of `r threshna * 100`% missing data to determine whether or not a variable will be included.  The first column holds a record number and is not useful for prediction.  It is therefore removed as well.  A quick exploration of the data shows that there does appear to be a relationship between time and performance.  Given the time frame, this may be related to tiring as exercises are performed.  The time measures are therefore left in the analysis for further evaluation.  This leaves `r dim(datTrain)[2]` variables to use as predictors.  
+
+#Training the Predictor
+
+```{r prep, echo=FALSE}
+seedme <- 25897
+set.seed(seedme)
+```
+To insure reproducibility, the seed is set to `r seedme`.  
+
+###Decision Tree
+```{r model decision tree}
+mdlDecTree <- rpart(classe ~ ., data=datTrain, method="class")
+fancyRpartPlot(mdlDecTree)
+```
+
+###Random Forest
+```{r model random forest}
+
+
+```
+
+###PCA
+```{r model PCA}
+
+
+```
+
+
+#Predicting on the Test Data
+
+
+#Conclusion
