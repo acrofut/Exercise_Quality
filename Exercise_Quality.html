@@ -120,8 +120,23 @@ $(document).ready(function () {
 </div>
 <div id="getting-data-and-preprocessing" class="section level1">
 <h1>Getting Data and Preprocessing</h1>
+<pre class="r"><code>seedme &lt;- 123
+set.seed(seedme)</code></pre>
+<p>For reproducibility, the seed is set to 123.</p>
 <div id="required-packages" class="section level3">
 <h3>Required Packages</h3>
+<pre class="r"><code>if (!&quot;caret&quot; %in% installed.packages()) install.packages(&quot;caret&quot;, repos=&quot;http://cran.rstudio.com/&quot;)
+library(&quot;caret&quot;)
+if (!&quot;randomForest&quot; %in% installed.packages()) install.packages(&quot;randomForest&quot;, repos=&quot;http://cran.rstudio.com/&quot;)
+library(&quot;randomForest&quot;)
+if (!&quot;RCurl&quot; %in% installed.packages()) install.packages(&quot;RCurl&quot;, repos=&quot;http://cran.rstudio.com/&quot;)
+library(&quot;RCurl&quot;)
+if (!&quot;rpart&quot; %in% installed.packages()) install.packages(&quot;rpart&quot;, repos=&quot;http://cran.rstudio.com/&quot;)
+library(&quot;rpart&quot;)
+if (!&quot;rpart.plot&quot; %in% installed.packages()) install.packages(&quot;rpart.plot&quot;, repos=&quot;http://cran.rstudio.com/&quot;)
+library(&quot;rpart.plot&quot;)
+if (!&quot;rattle&quot; %in% installed.packages()) install.packages(&quot;rattle&quot;, repos=&quot;http://cran.rstudio.com/&quot;)
+library(&quot;rattle&quot;)</code></pre>
 </div>
 <div id="download-data" class="section level3">
 <h3>Download Data</h3>
@@ -153,67 +168,80 @@ datTest &lt;- read.csv(textConnection(fileTest), header=TRUE, sep=&quot;,&quot;,
 </div>
 <div id="training-the-predictor" class="section level1">
 <h1>Training the Predictor</h1>
-<p>For reproducibility, the seed is set to 123.</p>
+<p>First, the data is separated into a training sample and a quiz sample so an estimate of out-of-sample error can be made before predicting with the test data.</p>
+<pre class="r"><code>inTrain &lt;- createDataPartition(y=datTrain$classe, p=0.75, list=FALSE)
+myTraining &lt;- datTrain[inTrain,]
+myQuiz &lt;- datTrain[-inTrain,]</code></pre>
 <div id="decision-tree" class="section level3">
 <h3>Decision Tree</h3>
-<pre class="r"><code>modDecTree &lt;- rpart(classe ~ ., data=datTrain, method=&quot;class&quot;)         # train the model
-predDecTree &lt;- predict(modDecTree, datTrain, type=&quot;class&quot;)            # predict on training set
-resultDecTree &lt;- confusionMatrix(predDecTree, datTrain$classe)        # evaluate model success
-print(xtable(as.table(resultDecTree$overall), caption=&quot;Decision Tree Results&quot;))</code></pre>
-<pre><code>## % latex table generated in R 3.1.3 by xtable 1.8-2 package
-## % Sun May 22 16:23:40 2016
-## \begin{table}[ht]
-## \centering
-## \begin{tabular}{rr}
-##   \hline
-##  &amp; x \\ 
-##   \hline
-## Accuracy &amp; 0.87 \\ 
-##   Kappa &amp; 0.83 \\ 
-##   AccuracyLower &amp; 0.86 \\ 
-##   AccuracyUpper &amp; 0.87 \\ 
-##   AccuracyNull &amp; 0.28 \\ 
-##   AccuracyPValue &amp; 0.00 \\ 
-##   McnemarPValue &amp;  \\ 
-##    \hline
-## \end{tabular}
-## \caption{Decision Tree Results} 
-## \end{table}</code></pre>
-<p>The decision tree yielded an accuracy of 86.7%, meaning an in-sample error rate of 13.3%.</p>
+<pre class="r"><code>modDecTree &lt;- rpart(classe ~ ., data=myTraining, method=&quot;class&quot;)         # train the model
+predDecTree &lt;- predict(modDecTree, myTraining, type=&quot;class&quot;)            # predict on training set
+resultDecTree &lt;- confusionMatrix(predDecTree, myTraining$classe)        # evaluate model success
+as.table(resultDecTree$overall)</code></pre>
+<pre><code>##       Accuracy          Kappa  AccuracyLower  AccuracyUpper   AccuracyNull 
+##      0.8747792      0.8416655      0.8693240      0.8800857      0.2843457 
+## AccuracyPValue  McnemarPValue 
+##      0.0000000</code></pre>
+<p>The decision tree yielded an accuracy of 87.5%, meaning an in-sample error rate of 12.5%.</p>
 </div>
 <div id="random-forest" class="section level3">
 <h3>Random Forest</h3>
-<pre class="r"><code>modRandForest &lt;- randomForest(classe ~ ., data=datTrain)
-predRandForest &lt;- predict(modRandForest, datTrain, type=&quot;class&quot;)
-resultRandForest &lt;- confusionMatrix(predRandForest, datTrain$classe)
-print(xtable(as.table(resultRandForest$overall), caption=&quot;Random Forest Results&quot;))</code></pre>
-<pre><code>## % latex table generated in R 3.1.3 by xtable 1.8-2 package
-## % Sun May 22 16:24:27 2016
-## \begin{table}[ht]
-## \centering
-## \begin{tabular}{rr}
-##   \hline
-##  &amp; x \\ 
-##   \hline
-## Accuracy &amp; 1.00 \\ 
-##   Kappa &amp; 1.00 \\ 
-##   AccuracyLower &amp; 1.00 \\ 
-##   AccuracyUpper &amp; 1.00 \\ 
-##   AccuracyNull &amp; 0.28 \\ 
-##   AccuracyPValue &amp; 0.00 \\ 
-##   McnemarPValue &amp;  \\ 
-##    \hline
-## \end{tabular}
-## \caption{Random Forest Results} 
-## \end{table}</code></pre>
+<pre class="r"><code>modRandForest &lt;- randomForest(classe ~ ., data=myTraining)
+predRandForest &lt;- predict(modRandForest, myTraining, type=&quot;class&quot;)
+resultRandForest &lt;- confusionMatrix(predRandForest, myTraining$classe)
+as.table(resultRandForest$overall)</code></pre>
+<pre><code>##       Accuracy          Kappa  AccuracyLower  AccuracyUpper   AccuracyNull 
+##      1.0000000      1.0000000      0.9997494      1.0000000      0.2843457 
+## AccuracyPValue  McnemarPValue 
+##      0.0000000</code></pre>
 <p>The decision tree yielded an accuracy of 100%, meaning an in-sample error rate of 0%. This suggests the random forest model may be overfitted.</p>
 </div>
+<div id="estimating-out-of-sample-error" class="section level3">
+<h3>Estimating Out-of-Sample Error</h3>
+<p>The random forest had the higher accuracy and is therefore used to predict on the test data and estimate out-of-sample error. The random forest requires coercion of the data in the test sample to the same type as the data in the training sample.</p>
+<pre class="r"><code># predict on quiz sample
+predQuiz &lt;- predict(modRandForest, newdata=myQuiz, type=&quot;class&quot;)
+resultQuiz &lt;- confusionMatrix(predQuiz, myQuiz$classe)
+as.table(resultQuiz$overall)</code></pre>
+<pre><code>##       Accuracy          Kappa  AccuracyLower  AccuracyUpper   AccuracyNull 
+##      0.9979608      0.9974207      0.9962531      0.9990217      0.2844617 
+## AccuracyPValue  McnemarPValue 
+##      0.0000000</code></pre>
+<p>With an accuracy of 99.8%, the out-of-sample error rate is estimated as 0.2%</p>
 </div>
-<div id="predicting-on-the-test-data" class="section level1">
-<h1>Predicting on the Test Data</h1>
 </div>
 <div id="conclusion" class="section level1">
 <h1>Conclusion</h1>
+<p>With an out-of-sample error well above 99%, the model is used to predict classe values on the test data provided.</p>
+<pre class="r"><code># make types in datTest match datTrain
+for (i in 1:length(datTest) ) {
+        levels(datTest[,i]) &lt;- levels(myTraining[,i])     
+}
+
+predTest &lt;- predict(modRandForest, newdata=datTest, type=&quot;class&quot;)
+predictions &lt;- data.frame(index=c(1:20), classe=predTest)
+predictions</code></pre>
+<pre><code>##    index classe
+## 1      1      B
+## 2      2      A
+## 3      3      B
+## 4      4      A
+## 5      5      A
+## 6      6      E
+## 7      7      D
+## 8      8      B
+## 9      9      A
+## 10    10      A
+## 11    11      B
+## 12    12      C
+## 13    13      B
+## 14    14      A
+## 15    15      E
+## 16    16      E
+## 17    17      A
+## 18    18      B
+## 19    19      B
+## 20    20      B</code></pre>
 </div>
 
 

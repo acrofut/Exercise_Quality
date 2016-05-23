@@ -10,9 +10,14 @@ output: html_document
 
 
 #Getting Data and Preprocessing
+```{r set seed}
+seedme <- 123
+set.seed(seedme)
+```
+For reproducibility, the seed is set to `r format(seedme, scientific=FALSE)`. 
 
 ###Required Packages
-```{r packages, echo=FALSE, warning=FALSE, message=FALSE}
+```{r packages, echo=TRUE, warning=FALSE, message=FALSE}
 if (!"caret" %in% installed.packages()) install.packages("caret", repos="http://cran.rstudio.com/")
 library("caret")
 if (!"randomForest" %in% installed.packages()) install.packages("randomForest", repos="http://cran.rstudio.com/")
@@ -34,7 +39,7 @@ Exercise data was downloaded from the following URLs:
 * [Test Data](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv)
 
 The data is in the form of two comma-delimited files, one for training data and one for testing data.  The data have many missing data points represented by "NA", "DIV/0" (a divide by zero error), and empty strings.  While reading the data, these strings are all converted to the standard "NA". 
-```{r getdata, cache=TRUE}
+```{r getdata}
 urlTrain <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
 urlTest <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
 fileTrain <- getURL(urlTrain)
@@ -68,41 +73,53 @@ datTest <- datTest[, -dropcols]
 datTrain <- datTrain[, -1]
 datTest <- datTest[, -1]
 ```
-
 Everything from column 8 through 159 are recast as numeric as they hold data from the sensors.  Many variables are comprised mostly of missing values.  This analysis uses a threshold of `r threshna * 100`% missing data to determine whether or not a variable will be included.  The first column holds a record number and is not useful for prediction.  It is therefore removed as well.  A quick exploration of the data shows that there does appear to be a relationship between time and performance.  Given the time frame, this may be related to tiring as exercises are performed.  Therefore, the date columns were retained.  This leaves `r dim(datTrain)[2] - 1` variables to use as predictors.  
 
 #Training the Predictor
-```{r prep, echo=FALSE}
-seedme <- 123
-set.seed(seedme)
+First, the data is separated into a training sample and a quiz sample so an estimate of out-of-sample error can be made before predicting with the test data.
+```{r create partitions}
+inTrain <- createDataPartition(y=datTrain$classe, p=0.75, list=FALSE)
+myTraining <- datTrain[inTrain,]
+myQuiz <- datTrain[-inTrain,]
 ```
-For reproducibility, the seed is set to `r format(seedme, scientific=FALSE)`.  
 
 ###Decision Tree
 ```{r model decision tree}
-modDecTree <- rpart(classe ~ ., data=datTrain, method="class")         # train the model
-predDecTree <- predict(modDecTree, datTrain, type="class")            # predict on training set
-resultDecTree <- confusionMatrix(predDecTree, datTrain$classe)        # evaluate model success
+modDecTree <- rpart(classe ~ ., data=myTraining, method="class")         # train the model
+predDecTree <- predict(modDecTree, myTraining, type="class")            # predict on training set
+resultDecTree <- confusionMatrix(predDecTree, myTraining$classe)        # evaluate model success
 as.table(resultDecTree$overall)
 ```
 The decision tree yielded an accuracy of `r round(resultDecTree$overall["Accuracy"] * 100, digits=1)`%, meaning an in-sample error rate of `r 100 - round(resultDecTree$overall["Accuracy"] * 100, digits=1)`%.
 
 ###Random Forest
-```{r model random forest}
-modRandForest <- randomForest(classe ~ ., data=datTrain)
-predRandForest <- predict(modRandForest, datTrain, type="class")
-resultRandForest <- confusionMatrix(predRandForest, datTrain$classe)
+```{r model random forest, cache=TRUE}
+modRandForest <- randomForest(classe ~ ., data=myTraining)
+predRandForest <- predict(modRandForest, myTraining, type="class")
+resultRandForest <- confusionMatrix(predRandForest, myTraining$classe)
 as.table(resultRandForest$overall)
 ```
 The decision tree yielded an accuracy of `r round(resultRandForest$overall["Accuracy"] * 100, digits=1)`%, meaning an in-sample error rate of `r 100 - round(resultRandForest$overall["Accuracy"] * 100, digits=1)`%. This suggests the random forest model may be overfitted.
 
-###Predicting on the Test Data 
-The random forest had the higher accuracy and is therefore used to predict on the test data and estimate out-of-sample error.
-```{r predicting}
-preds <- predict(modRandForest, newdata=datTest)
-resultTest <- confusionMatrix(preds, datTest$classe)
-as.table(resultTest$overall)
+###Estimating Out-of-Sample Error
+The random forest had the higher accuracy and is therefore used to predict on the test data and estimate out-of-sample error.  The random forest requires coercion of the data in the test sample to the same type as the data in the training sample.
+```{r out of sample error}
+# predict on quiz sample
+predQuiz <- predict(modRandForest, newdata=myQuiz, type="class")
+resultQuiz <- confusionMatrix(predQuiz, myQuiz$classe)
+as.table(resultQuiz$overall)
 ```
-With an accuracy of `r round(resltTest$overall["Accuracy"] * 100, digits=1)`%, the out-of-sample error rate is estimated as `r 100 - round(resultTest$overall["Accuracy"] * 100, digits=1)`%
+With an accuracy of `r round(resultQuiz$overall["Accuracy"] * 100, digits=1)`%, the out-of-sample error rate is estimated as `r 100 - round(resultQuiz$overall["Accuracy"] * 100, digits=1)`%
 
 #Conclusion
+With an out-of-sample error well above 99%, the model is used to predict classe values on the test data provided.
+```{r test data}
+# make types in datTest match datTrain
+for (i in 1:length(datTest) ) {
+        levels(datTest[,i]) <- levels(myTraining[,i])     
+}
+
+predTest <- predict(modRandForest, newdata=datTest, type="class")
+predictions <- data.frame(index=c(1:20), classe=predTest)
+predictions
+```

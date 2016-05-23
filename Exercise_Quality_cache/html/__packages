@@ -1,13 +1,10 @@
 base
-methods
-datasets
-utils
-grDevices
-graphics
-stats
 lattice
 ggplot2
 caret
 randomForest
 bitops
 RCurl
+rpart
+rpart.plot
+rattle
