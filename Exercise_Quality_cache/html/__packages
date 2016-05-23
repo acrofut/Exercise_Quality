@@ -1,10 +1,22 @@
 base
+<<<<<<< HEAD
+=======
+methods
+datasets
+utils
+grDevices
+graphics
+stats
+>>>>>>> 8b7e6f0e96dee1fbe2224414c8a3629247144cd4
 lattice
 ggplot2
 caret
 randomForest
 bitops
 RCurl
+<<<<<<< HEAD
 rpart
 rpart.plot
 rattle
+=======
+>>>>>>> 8b7e6f0e96dee1fbe2224414c8a3629247144cd4

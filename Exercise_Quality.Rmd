@@ -10,6 +10,7 @@ output: html_document
 
 
 #Getting Data and Preprocessing
+<<<<<<< HEAD
 ```{r set seed}
 seedme <- 123
 set.seed(seedme)
@@ -18,6 +19,11 @@ For reproducibility, the seed is set to `r format(seedme, scientific=FALSE)`.
 
 ###Required Packages
 ```{r packages, echo=TRUE, warning=FALSE, message=FALSE}
+=======
+
+###Required Packages
+```{r packages, echo=FALSE, warning=FALSE, message=FALSE}
+>>>>>>> 8b7e6f0e96dee1fbe2224414c8a3629247144cd4
 if (!"caret" %in% installed.packages()) install.packages("caret", repos="http://cran.rstudio.com/")
 library("caret")
 if (!"randomForest" %in% installed.packages()) install.packages("randomForest", repos="http://cran.rstudio.com/")
@@ -26,8 +32,11 @@ if (!"RCurl" %in% installed.packages()) install.packages("RCurl", repos="http://
 library("RCurl")
 if (!"rpart" %in% installed.packages()) install.packages("rpart", repos="http://cran.rstudio.com/")
 library("rpart")
+<<<<<<< HEAD
 if (!"rpart.plot" %in% installed.packages()) install.packages("rpart.plot", repos="http://cran.rstudio.com/")
 library("rpart.plot")
+=======
+>>>>>>> 8b7e6f0e96dee1fbe2224414c8a3629247144cd4
 if (!"rattle" %in% installed.packages()) install.packages("rattle", repos="http://cran.rstudio.com/")
 library("rattle")
 ```
@@ -39,7 +48,11 @@ Exercise data was downloaded from the following URLs:
 * [Test Data](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv)
 
 The data is in the form of two comma-delimited files, one for training data and one for testing data.  The data have many missing data points represented by "NA", "DIV/0" (a divide by zero error), and empty strings.  While reading the data, these strings are all converted to the standard "NA". 
+<<<<<<< HEAD
 ```{r getdata}
+=======
+```{r getdata, cache=TRUE}
+>>>>>>> 8b7e6f0e96dee1fbe2224414c8a3629247144cd4
 urlTrain <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
 urlTest <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
 fileTrain <- getURL(urlTrain)
@@ -67,6 +80,7 @@ threshna <- 0.75
 countna <- is.na(datTrain)
 dropcols <- which(colSums(countna) > threshna * dim(datTrain))
 datTrain <- datTrain[, -dropcols]
+<<<<<<< HEAD
 datTest <- datTest[, -dropcols]
 
 # remove first column
@@ -123,3 +137,43 @@ predTest <- predict(modRandForest, newdata=datTest, type="class")
 predictions <- data.frame(index=c(1:20), classe=predTest)
 predictions
 ```
+=======
+
+# remove first column
+datTrain <- datTrain[, -1]
+```
+
+Everything from column 8 through 159 are recast as numeric as they hold data from the sensors.  Many variables are comprised mostly of missing values.  This analysis uses a threshold of `r threshna * 100`% missing data to determine whether or not a variable will be included.  The first column holds a record number and is not useful for prediction.  It is therefore removed as well.  A quick exploration of the data shows that there does appear to be a relationship between time and performance.  Given the time frame, this may be related to tiring as exercises are performed.  The time measures are therefore left in the analysis for further evaluation.  This leaves `r dim(datTrain)[2]` variables to use as predictors.  
+
+#Training the Predictor
+
+```{r prep, echo=FALSE}
+seedme <- 25897
+set.seed(seedme)
+```
+To insure reproducibility, the seed is set to `r seedme`.  
+
+###Decision Tree
+```{r model decision tree}
+mdlDecTree <- rpart(classe ~ ., data=datTrain, method="class")
+fancyRpartPlot(mdlDecTree)
+```
+
+###Random Forest
+```{r model random forest}
+
+
+```
+
+###PCA
+```{r model PCA}
+
+
+```
+
+
+#Predicting on the Test Data
+
+
+#Conclusion
+>>>>>>> 8b7e6f0e96dee1fbe2224414c8a3629247144cd4

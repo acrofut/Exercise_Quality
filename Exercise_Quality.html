@@ -120,6 +120,7 @@ $(document).ready(function () {
 </div>
 <div id="getting-data-and-preprocessing" class="section level1">
 <h1>Getting Data and Preprocessing</h1>
+<<<<<<< HEAD
 <pre class="r"><code>seedme &lt;- 123
 set.seed(seedme)</code></pre>
 <p>For reproducibility, the seed is set to 123.</p>
@@ -137,6 +138,26 @@ if (!&quot;rpart.plot&quot; %in% installed.packages()) install.packages(&quot;rp
 library(&quot;rpart.plot&quot;)
 if (!&quot;rattle&quot; %in% installed.packages()) install.packages(&quot;rattle&quot;, repos=&quot;http://cran.rstudio.com/&quot;)
 library(&quot;rattle&quot;)</code></pre>
+=======
+<div id="required-packages" class="section level3">
+<h3>Required Packages</h3>
+<pre class="r"><code>if (!&quot;caret&quot; %in% installed.packages()) install.packages(&quot;caret&quot;)
+library(&quot;caret&quot;)</code></pre>
+<pre><code>## Loading required package: lattice</code></pre>
+<pre><code>## Loading required package: ggplot2</code></pre>
+<pre class="r"><code>if (!&quot;randomForest&quot; %in% installed.packages()) install.packages(&quot;randomForest&quot;)
+library(&quot;randomForest&quot;)</code></pre>
+<pre><code>## randomForest 4.6-12</code></pre>
+<pre><code>## Type rfNews() to see new features/changes/bug fixes.</code></pre>
+<pre><code>## 
+## Attaching package: 'randomForest'</code></pre>
+<pre><code>## The following object is masked from 'package:ggplot2':
+## 
+##     margin</code></pre>
+<pre class="r"><code>if (!&quot;RCurl&quot; %in% installed.packages()) install.packages(&quot;RCurl&quot;)
+library(&quot;RCurl&quot;)</code></pre>
+<pre><code>## Loading required package: bitops</code></pre>
+>>>>>>> 8b7e6f0e96dee1fbe2224414c8a3629247144cd4
 </div>
 <div id="download-data" class="section level3">
 <h3>Download Data</h3>
@@ -163,11 +184,29 @@ datTest &lt;- read.csv(textConnection(fileTest), header=TRUE, sep=&quot;,&quot;,
 <li>Columns 8-159 contain the sensor reading variables, helpfully identified by a string indicated the exercise performed</li>
 <li>Column 160 contains the “classe” variable that is to be predicted</li>
 </ol>
+<<<<<<< HEAD
 <p>Everything from column 8 through 159 are recast as numeric as they hold data from the sensors. Many variables are comprised mostly of missing values. This analysis uses a threshold of 75% missing data to determine whether or not a variable will be included. The first column holds a record number and is not useful for prediction. It is therefore removed as well. A quick exploration of the data shows that there does appear to be a relationship between time and performance. Given the time frame, this may be related to tiring as exercises are performed. Therefore, the date columns were retained. This leaves 58 variables to use as predictors.</p>
+=======
+<pre class="r"><code># cast data as numeric
+for(i in c(8:159)) {datTrain[,i] &lt;- as.numeric(as.character(datTrain[,i]))}
+for(i in c(8:159)) {datTest[,i] &lt;- as.numeric(as.character(datTest[,i]))}
+
+# remove values with too many NAs
+threshna &lt;- 0.75
+countna &lt;- is.na(datTrain)
+dropcols &lt;- which(colSums(countna) &gt; threshna * dim(datTrain))
+datTrain &lt;- datTrain[, -dropcols]
+dim(datTrain)</code></pre>
+<pre><code>## [1] 19622    60</code></pre>
+<pre class="r"><code># remove first column
+datTrain &lt;- datTrain[, -1]</code></pre>
+<p>Everything from column 8 through 159 are recast as numeric as they hold data from the sensors. Many variables are comprised mostly of missing values. This analysis uses a threshold of 75% missing data to determine whether or not a variable will be included. The first column holds a record number and is not useful for prediction. It is therefore removed as well. A quick exploration of the data shows that there does appear to be a relationship between time and performance. Given the time frame, this may be related to tiring as exercises are performed. The time measures are therefore left in the analysis for further evaluation. This leaves 59 variables to use as predictors.</p>
+>>>>>>> 8b7e6f0e96dee1fbe2224414c8a3629247144cd4
 </div>
 </div>
 <div id="training-the-predictor" class="section level1">
 <h1>Training the Predictor</h1>
+<<<<<<< HEAD
 <p>First, the data is separated into a training sample and a quiz sample so an estimate of out-of-sample error can be made before predicting with the test data.</p>
 <pre class="r"><code>inTrain &lt;- createDataPartition(y=datTrain$classe, p=0.75, list=FALSE)
 myTraining &lt;- datTrain[inTrain,]
@@ -242,6 +281,14 @@ predictions</code></pre>
 ## 18    18      B
 ## 19    19      B
 ## 20    20      B</code></pre>
+=======
+</div>
+<div id="predicting-on-the-test-data" class="section level1">
+<h1>Predicting on the Test Data</h1>
+</div>
+<div id="conclusion" class="section level1">
+<h1>Conclusion</h1>
+>>>>>>> 8b7e6f0e96dee1fbe2224414c8a3629247144cd4
 </div>
 
 
