@@ -6,11 +6,9 @@ output: html_document
 ---
 
 #Executive Summary
-
-
+This analysis examines data from the [Weight Lifting Exercises Dataset](http://groupware.les.inf.puc-rio.br/har).  In this dataset, six subjects performed exercises in five different ways, recorded as A through E.  Class A corresponds to the correct way to perform the exercise and classes B through E correspond to mistakes often made.  Four sensors were used to collect data about the exercises as they were performed.  This analysis uses this data to predict the class for that workout.
 
 #Getting Data and Preprocessing
-<<<<<<< HEAD
 ```{r set seed}
 seedme <- 123
 set.seed(seedme)
@@ -18,12 +16,8 @@ set.seed(seedme)
 For reproducibility, the seed is set to `r format(seedme, scientific=FALSE)`. 
 
 ###Required Packages
+The following packages are required to reproduce this analysis:
 ```{r packages, echo=TRUE, warning=FALSE, message=FALSE}
-=======
-
-###Required Packages
-```{r packages, echo=FALSE, warning=FALSE, message=FALSE}
->>>>>>> 8b7e6f0e96dee1fbe2224414c8a3629247144cd4
 if (!"caret" %in% installed.packages()) install.packages("caret", repos="http://cran.rstudio.com/")
 library("caret")
 if (!"randomForest" %in% installed.packages()) install.packages("randomForest", repos="http://cran.rstudio.com/")
@@ -32,11 +26,8 @@ if (!"RCurl" %in% installed.packages()) install.packages("RCurl", repos="http://
 library("RCurl")
 if (!"rpart" %in% installed.packages()) install.packages("rpart", repos="http://cran.rstudio.com/")
 library("rpart")
-<<<<<<< HEAD
 if (!"rpart.plot" %in% installed.packages()) install.packages("rpart.plot", repos="http://cran.rstudio.com/")
 library("rpart.plot")
-=======
->>>>>>> 8b7e6f0e96dee1fbe2224414c8a3629247144cd4
 if (!"rattle" %in% installed.packages()) install.packages("rattle", repos="http://cran.rstudio.com/")
 library("rattle")
 ```
@@ -48,11 +39,7 @@ Exercise data was downloaded from the following URLs:
 * [Test Data](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv)
 
 The data is in the form of two comma-delimited files, one for training data and one for testing data.  The data have many missing data points represented by "NA", "DIV/0" (a divide by zero error), and empty strings.  While reading the data, these strings are all converted to the standard "NA". 
-<<<<<<< HEAD
 ```{r getdata}
-=======
-```{r getdata, cache=TRUE}
->>>>>>> 8b7e6f0e96dee1fbe2224414c8a3629247144cd4
 urlTrain <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
 urlTest <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
 fileTrain <- getURL(urlTrain)
@@ -80,7 +67,6 @@ threshna <- 0.75
 countna <- is.na(datTrain)
 dropcols <- which(colSums(countna) > threshna * dim(datTrain))
 datTrain <- datTrain[, -dropcols]
-<<<<<<< HEAD
 datTest <- datTest[, -dropcols]
 
 # remove first column
@@ -116,7 +102,7 @@ as.table(resultRandForest$overall)
 The decision tree yielded an accuracy of `r round(resultRandForest$overall["Accuracy"] * 100, digits=1)`%, meaning an in-sample error rate of `r 100 - round(resultRandForest$overall["Accuracy"] * 100, digits=1)`%. This suggests the random forest model may be overfitted.
 
 ###Estimating Out-of-Sample Error
-The random forest had the higher accuracy and is therefore used to predict on the test data and estimate out-of-sample error.  The random forest requires coercion of the data in the test sample to the same type as the data in the training sample.
+The random forest had the higher accuracy and is therefore used to predict on the test data and estimate out-of-sample error.
 ```{r out of sample error}
 # predict on quiz sample
 predQuiz <- predict(modRandForest, newdata=myQuiz, type="class")
@@ -126,7 +112,7 @@ as.table(resultQuiz$overall)
 With an accuracy of `r round(resultQuiz$overall["Accuracy"] * 100, digits=1)`%, the out-of-sample error rate is estimated as `r 100 - round(resultQuiz$overall["Accuracy"] * 100, digits=1)`%
 
 #Conclusion
-With an out-of-sample error well above 99%, the model is used to predict classe values on the test data provided.
+With an out-of-sample error well below 1%, the model is used to predict classe values on the test data provided.
 ```{r test data}
 # make types in datTest match datTrain
 for (i in 1:length(datTest) ) {
@@ -135,45 +121,18 @@ for (i in 1:length(datTest) ) {
 
 predTest <- predict(modRandForest, newdata=datTest, type="class")
 predictions <- data.frame(index=c(1:20), classe=predTest)
+```
+This data is submitted to a text file.
+```{r write answers to file}
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+
 predictions
+
+pml_write_files(predictions[,2])
 ```
-=======
-
-# remove first column
-datTrain <- datTrain[, -1]
-```
-
-Everything from column 8 through 159 are recast as numeric as they hold data from the sensors.  Many variables are comprised mostly of missing values.  This analysis uses a threshold of `r threshna * 100`% missing data to determine whether or not a variable will be included.  The first column holds a record number and is not useful for prediction.  It is therefore removed as well.  A quick exploration of the data shows that there does appear to be a relationship between time and performance.  Given the time frame, this may be related to tiring as exercises are performed.  The time measures are therefore left in the analysis for further evaluation.  This leaves `r dim(datTrain)[2]` variables to use as predictors.  
-
-#Training the Predictor
-
-```{r prep, echo=FALSE}
-seedme <- 25897
-set.seed(seedme)
-```
-To insure reproducibility, the seed is set to `r seedme`.  
-
-###Decision Tree
-```{r model decision tree}
-mdlDecTree <- rpart(classe ~ ., data=datTrain, method="class")
-fancyRpartPlot(mdlDecTree)
-```
-
-###Random Forest
-```{r model random forest}
-
-
-```
-
-###PCA
-```{r model PCA}
-
-
-```
-
-
-#Predicting on the Test Data
-
-
-#Conclusion
->>>>>>> 8b7e6f0e96dee1fbe2224414c8a3629247144cd4

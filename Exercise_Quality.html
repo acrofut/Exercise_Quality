@@ -117,15 +117,16 @@ $(document).ready(function () {
 
 <div id="executive-summary" class="section level1">
 <h1>Executive Summary</h1>
+<p>This analysis examines data from the <a href="http://groupware.les.inf.puc-rio.br/har">Weight Lifting Exercises Dataset</a>. In this dataset, six subjects performed exercises in five different ways, recorded as A through E. Class A corresponds to the correct way to perform the exercise and classes B through E correspond to mistakes often made. Four sensors were used to collect data about the exercises as they were performed. This analysis uses this data to predict the class for that workout.</p>
 </div>
 <div id="getting-data-and-preprocessing" class="section level1">
 <h1>Getting Data and Preprocessing</h1>
-<<<<<<< HEAD
 <pre class="r"><code>seedme &lt;- 123
 set.seed(seedme)</code></pre>
 <p>For reproducibility, the seed is set to 123.</p>
 <div id="required-packages" class="section level3">
 <h3>Required Packages</h3>
+<p>The following packages are required to reproduce this analysis:</p>
 <pre class="r"><code>if (!&quot;caret&quot; %in% installed.packages()) install.packages(&quot;caret&quot;, repos=&quot;http://cran.rstudio.com/&quot;)
 library(&quot;caret&quot;)
 if (!&quot;randomForest&quot; %in% installed.packages()) install.packages(&quot;randomForest&quot;, repos=&quot;http://cran.rstudio.com/&quot;)
@@ -138,26 +139,6 @@ if (!&quot;rpart.plot&quot; %in% installed.packages()) install.packages(&quot;rp
 library(&quot;rpart.plot&quot;)
 if (!&quot;rattle&quot; %in% installed.packages()) install.packages(&quot;rattle&quot;, repos=&quot;http://cran.rstudio.com/&quot;)
 library(&quot;rattle&quot;)</code></pre>
-=======
-<div id="required-packages" class="section level3">
-<h3>Required Packages</h3>
-<pre class="r"><code>if (!&quot;caret&quot; %in% installed.packages()) install.packages(&quot;caret&quot;)
-library(&quot;caret&quot;)</code></pre>
-<pre><code>## Loading required package: lattice</code></pre>
-<pre><code>## Loading required package: ggplot2</code></pre>
-<pre class="r"><code>if (!&quot;randomForest&quot; %in% installed.packages()) install.packages(&quot;randomForest&quot;)
-library(&quot;randomForest&quot;)</code></pre>
-<pre><code>## randomForest 4.6-12</code></pre>
-<pre><code>## Type rfNews() to see new features/changes/bug fixes.</code></pre>
-<pre><code>## 
-## Attaching package: 'randomForest'</code></pre>
-<pre><code>## The following object is masked from 'package:ggplot2':
-## 
-##     margin</code></pre>
-<pre class="r"><code>if (!&quot;RCurl&quot; %in% installed.packages()) install.packages(&quot;RCurl&quot;)
-library(&quot;RCurl&quot;)</code></pre>
-<pre><code>## Loading required package: bitops</code></pre>
->>>>>>> 8b7e6f0e96dee1fbe2224414c8a3629247144cd4
 </div>
 <div id="download-data" class="section level3">
 <h3>Download Data</h3>
@@ -184,29 +165,11 @@ datTest &lt;- read.csv(textConnection(fileTest), header=TRUE, sep=&quot;,&quot;,
 <li>Columns 8-159 contain the sensor reading variables, helpfully identified by a string indicated the exercise performed</li>
 <li>Column 160 contains the “classe” variable that is to be predicted</li>
 </ol>
-<<<<<<< HEAD
 <p>Everything from column 8 through 159 are recast as numeric as they hold data from the sensors. Many variables are comprised mostly of missing values. This analysis uses a threshold of 75% missing data to determine whether or not a variable will be included. The first column holds a record number and is not useful for prediction. It is therefore removed as well. A quick exploration of the data shows that there does appear to be a relationship between time and performance. Given the time frame, this may be related to tiring as exercises are performed. Therefore, the date columns were retained. This leaves 58 variables to use as predictors.</p>
-=======
-<pre class="r"><code># cast data as numeric
-for(i in c(8:159)) {datTrain[,i] &lt;- as.numeric(as.character(datTrain[,i]))}
-for(i in c(8:159)) {datTest[,i] &lt;- as.numeric(as.character(datTest[,i]))}
-
-# remove values with too many NAs
-threshna &lt;- 0.75
-countna &lt;- is.na(datTrain)
-dropcols &lt;- which(colSums(countna) &gt; threshna * dim(datTrain))
-datTrain &lt;- datTrain[, -dropcols]
-dim(datTrain)</code></pre>
-<pre><code>## [1] 19622    60</code></pre>
-<pre class="r"><code># remove first column
-datTrain &lt;- datTrain[, -1]</code></pre>
-<p>Everything from column 8 through 159 are recast as numeric as they hold data from the sensors. Many variables are comprised mostly of missing values. This analysis uses a threshold of 75% missing data to determine whether or not a variable will be included. The first column holds a record number and is not useful for prediction. It is therefore removed as well. A quick exploration of the data shows that there does appear to be a relationship between time and performance. Given the time frame, this may be related to tiring as exercises are performed. The time measures are therefore left in the analysis for further evaluation. This leaves 59 variables to use as predictors.</p>
->>>>>>> 8b7e6f0e96dee1fbe2224414c8a3629247144cd4
 </div>
 </div>
 <div id="training-the-predictor" class="section level1">
 <h1>Training the Predictor</h1>
-<<<<<<< HEAD
 <p>First, the data is separated into a training sample and a quiz sample so an estimate of out-of-sample error can be made before predicting with the test data.</p>
 <pre class="r"><code>inTrain &lt;- createDataPartition(y=datTrain$classe, p=0.75, list=FALSE)
 myTraining &lt;- datTrain[inTrain,]
@@ -237,7 +200,7 @@ as.table(resultRandForest$overall)</code></pre>
 </div>
 <div id="estimating-out-of-sample-error" class="section level3">
 <h3>Estimating Out-of-Sample Error</h3>
-<p>The random forest had the higher accuracy and is therefore used to predict on the test data and estimate out-of-sample error. The random forest requires coercion of the data in the test sample to the same type as the data in the training sample.</p>
+<p>The random forest had the higher accuracy and is therefore used to predict on the test data and estimate out-of-sample error.</p>
 <pre class="r"><code># predict on quiz sample
 predQuiz &lt;- predict(modRandForest, newdata=myQuiz, type=&quot;class&quot;)
 resultQuiz &lt;- confusionMatrix(predQuiz, myQuiz$classe)
@@ -251,14 +214,23 @@ as.table(resultQuiz$overall)</code></pre>
 </div>
 <div id="conclusion" class="section level1">
 <h1>Conclusion</h1>
-<p>With an out-of-sample error well above 99%, the model is used to predict classe values on the test data provided.</p>
+<p>With an out-of-sample error well below 1%, the model is used to predict classe values on the test data provided.</p>
 <pre class="r"><code># make types in datTest match datTrain
 for (i in 1:length(datTest) ) {
         levels(datTest[,i]) &lt;- levels(myTraining[,i])     
 }
 
 predTest &lt;- predict(modRandForest, newdata=datTest, type=&quot;class&quot;)
-predictions &lt;- data.frame(index=c(1:20), classe=predTest)
+predictions &lt;- data.frame(index=c(1:20), classe=predTest)</code></pre>
+<p>This data is submitted to a text file.</p>
+<pre class="r"><code>pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0(&quot;problem_id_&quot;,i,&quot;.txt&quot;)
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+
 predictions</code></pre>
 <pre><code>##    index classe
 ## 1      1      B
@@ -281,14 +253,7 @@ predictions</code></pre>
 ## 18    18      B
 ## 19    19      B
 ## 20    20      B</code></pre>
-=======
-</div>
-<div id="predicting-on-the-test-data" class="section level1">
-<h1>Predicting on the Test Data</h1>
-</div>
-<div id="conclusion" class="section level1">
-<h1>Conclusion</h1>
->>>>>>> 8b7e6f0e96dee1fbe2224414c8a3629247144cd4
+<pre class="r"><code>pml_write_files(predictions[,2])</code></pre>
 </div>
 
 
